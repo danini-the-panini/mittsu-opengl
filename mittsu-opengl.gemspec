@@ -24,13 +24,13 @@ Gem::Specification.new do |spec|
   spec.requirements << 'OpenGL 3.3+ capable hardware and drivers'
 
   spec.add_runtime_dependency 'opengl-bindings2'
-  spec.add_runtime_dependency 'fiddle'
-  spec.add_runtime_dependency 'mittsu'
+  spec.add_runtime_dependency 'fiddle', '~> 1.0'
+  spec.add_runtime_dependency 'mittsu', '~> 0.5.0'
 
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'minitest-reporters'
-  spec.add_development_dependency 'benchmark-ips'
+  spec.add_development_dependency 'bundler', '~> 2.5'
+  spec.add_development_dependency 'rake', '~> 13.2'
+  spec.add_development_dependency 'minitest', '~> 5.25'
+  spec.add_development_dependency 'minitest-reporters', '~> 1.7'
+  spec.add_development_dependency 'benchmark-ips', '~> 2.14'
   spec.add_development_dependency 'simplecov', '0.17.1'
 end
