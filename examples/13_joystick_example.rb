@@ -39,7 +39,7 @@ X_AXIS = Mittsu::Vector3.new(1.0, 0.0, 0.0)
 Y_AXIS = Mittsu::Vector3.new(0.0, 1.0, 0.0)
 
 renderer.window.on_resize do |width, height|
-  renderer.set_viewport(0, 0, width, height)
+  renderer.set_size(width, height)
   camera.aspect = width.to_f / height.to_f
   camera.update_projection_matrix
 end

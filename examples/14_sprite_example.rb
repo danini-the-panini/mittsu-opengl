@@ -83,7 +83,7 @@ renderer = Mittsu::OpenGL::Renderer.new width: SCREEN_WIDTH, height: SCREEN_HEIG
 renderer.auto_clear = false
 
 renderer.window.on_resize do |width, height|
-  renderer.set_viewport(0, 0, width, height)
+  renderer.set_size(width, height)
   camera.aspect = width.to_f / height.to_f
   camera.update_projection_matrix
 

@@ -41,7 +41,7 @@ class TestSkyboxE2E < Minitest::Test
     camera.position.z = 5.0
 
     renderer.window.on_resize do |width, height|
-      renderer.set_viewport(0, 0, width, height)
+      renderer.set_size(width, height)
       camera.aspect = skybox_camera.aspect = width.to_f / height.to_f
       camera.update_projection_matrix
       skybox_camera.update_projection_matrix
