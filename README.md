@@ -1,8 +1,8 @@
 # Mittsu
 
 [![Gem Version](https://badge.fury.io/rb/mittsu-opengl.svg)](https://badge.fury.io/rb/mittsu-opengl)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/XXX/test_coverage)](https://codeclimate.com/github/danini-the-panini/mittsu-opengl/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/XXX/maintainability)](https://codeclimate.com/github/danini-the-panini/mittsu-opengl/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/dd4137d5afd04077f4ec/test_coverage)](https://codeclimate.com/github/danini-the-panini/mittsu-opengl/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/dd4137d5afd04077f4ec/maintainability)](https://codeclimate.com/github/danini-the-panini/mittsu-opengl/maintainability)
 [![Build Status](https://github.com/danini-the-panini/mittsu-opengl/workflows/Build/badge.svg)](https://github.com/danini-the-panini/mittsu-opengl/actions?query=workflow%3A%22Build%22)
 
 OpenGL renderer for Mittsu
