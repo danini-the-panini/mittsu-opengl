@@ -1,4 +1,4 @@
-# Mittsu
+# Mittsu OpenGL Renderer
 
 [![Gem Version](https://badge.fury.io/rb/mittsu-opengl.svg)](https://badge.fury.io/rb/mittsu-opengl)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/dd4137d5afd04077f4ec/test_coverage)](https://codeclimate.com/github/danini-the-panini/mittsu-opengl/test_coverage)
