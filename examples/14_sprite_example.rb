@@ -96,6 +96,13 @@ renderer.window.on_resize do |width, height|
   update_hud_sprites.(width, height)
 end
 
+renderer.window.on_key_typed do |key|
+  case key
+  when GLFW::KEY_SPACE
+    renderer.take_screenshot("screenshot.png")
+  end
+end
+
 renderer.window.run do
   time = Time.now.to_f
 

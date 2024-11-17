@@ -318,6 +318,16 @@ module Mittsu
       @_opengl_objects.delete(object.id)
     end
 
+    def take_screenshot(filename, x: 0, y: 0, width: self.width, height: self.height)
+      type_nb_bytes = 1 # for GL_UNSIGNED_BYTE (0 to 255)
+      nb_channels = 3 # for GL_RGB
+      pixels = ' ' * width * height * type_nb_bytes * nb_channels
+      GL.ReadPixels(x, y, width, height, GL::RGB, GL::UNSIGNED_BYTE, pixels)
+      png = ChunkyPNG::Image.from_rgb_stream(width, height, pixels)
+      png.flip_horizontally!
+      png.save(filename)
+    end
+
     private
 
     def clear_color(r, g, b, a)

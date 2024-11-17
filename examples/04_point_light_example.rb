@@ -47,6 +47,13 @@ renderer.window.on_resize do |width, height|
   camera.update_projection_matrix
 end
 
+renderer.window.on_key_typed do |key|
+  case key
+  when GLFW::KEY_SPACE
+    renderer.take_screenshot("screenshot.png")
+  end
+end
+
 renderer.window.run do
   light_object.rotation.z += 0.1
   cube.rotation.x += 0.1

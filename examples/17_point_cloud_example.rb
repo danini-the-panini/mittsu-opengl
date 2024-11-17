@@ -59,6 +59,13 @@ renderer.window.on_resize do |width, height|
   camera.update_projection_matrix
 end
 
+renderer.window.on_key_typed do |key|
+  case key
+  when GLFW::KEY_SPACE
+    renderer.take_screenshot("screenshot.png")
+  end
+end
+
 time = 0
 renderer.window.run do
   scene.children.each_with_index do |object, i|

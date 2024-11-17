@@ -45,6 +45,13 @@ renderer.window.on_resize do |width, height|
   skybox_camera.update_projection_matrix
 end
 
+renderer.window.on_key_typed do |key|
+  case key
+  when GLFW::KEY_SPACE
+    renderer.take_screenshot("screenshot.png")
+  end
+end
+
 x = 0
 renderer.window.run do
   camera.position.x = 5.0 * Math.sin(x * 0.01)
