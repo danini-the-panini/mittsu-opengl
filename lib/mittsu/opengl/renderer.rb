@@ -8,7 +8,7 @@ opengl_lib = Mittsu::OpenGL::Lib.discover
 GL.load_lib(ENV["MITTSU_LIBGL_PATH"] || opengl_lib.path, Mittsu.debug?)
 
 require 'mittsu/glfw/window'
-require 'mittsu/opengl/gl_debug' if ENV['DEBUG']
+require 'mittsu/opengl/gl_debug' if Mittsu.debug?
 require 'mittsu/opengl/implementation'
 require 'mittsu/opengl/gl_extensions'
 require 'mittsu/opengl/helper'
