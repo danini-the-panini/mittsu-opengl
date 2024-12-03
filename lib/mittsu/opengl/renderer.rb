@@ -35,7 +35,7 @@ module Mittsu
     attr_reader :logarithmic_depth_buffer, :programs, :light_renderer, :proj_screen_matrix
 
     def initialize(parameters = {})
-      puts "Mittsu OpenGL Renderer #{VERSION}"
+      puts "Mittsu OpenGL Renderer #{OpenGL::VERSION} (Mittsu #{Mittsu::VERSION})"
 
       fetch_parameters(parameters)
 
