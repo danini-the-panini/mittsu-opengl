@@ -11,3 +11,6 @@
 *.gem
 .tool-versions
 **/*screenshot*.png
+*.dylib
+*.dll
+*.so
