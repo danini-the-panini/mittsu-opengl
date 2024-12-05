@@ -296,7 +296,7 @@ module Mittsu
           group_hash = "#{hash_map[material_index][:hash]}_#{hash_map[material_index][:counter]}"
 
           if !groups.include? group_hash
-            group = OpenGLGeometryGroup.new(material_index, num_morph_targets, num_morph_normals, @renderer)
+            group = OpenGL::GeometryGroup.new(material_index, num_morph_targets, num_morph_normals, @renderer)
 
             groups[group_hash] = group
             groups_list << group
