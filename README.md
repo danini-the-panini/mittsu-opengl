@@ -184,6 +184,14 @@ end
 
 If you just want to see what Mittsu can do and how to do it, take a peek inside the `examples` folder.
 
+### JRuby
+
+JRuby support is still a work in progress. This is mainly due to subtle behavioural differences in Fiddle.
+
+On macOS JRuby must be started with the `-J-XstartOnFirstThread` argument for GLFW to work. This is necessary because most GLFW functions must be called on the main thread and the Cocoa API requires that thread to be the first thread in the process. GLFW windows and the GLFW event loop are incompatible with other window toolkits (such as AWT/Swing or JavaFX).
+
+(Otherwise you have to extract and use the custom `libglfw_async.dylib` from [LWJGL3](https://www.lwjgl.org))
+
 ## Contributing
 
 1. Fork it ( https://github.com/danini-the-panini/mittsu-opengl/fork )
