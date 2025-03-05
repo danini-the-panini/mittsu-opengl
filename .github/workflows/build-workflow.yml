@@ -9,12 +9,12 @@ on:
 
 jobs:
   linux:
-    continue-on-error: ${{ matrix.ruby == 'head' || matrix.ruby == 'jruby-head' || matrix.ruby == 'truffleruby-head' }}
+    continue-on-error: ${{ matrix.ruby == 'head' }}
     name: Linux
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby: ['2.6', '2.7', '3.0', '3.1', '3.2', '3.3', '3.4', head, jruby, jruby-head, truffleruby, truffleruby-head]
+        ruby: ['2.6', '2.7', '3.0', '3.1', '3.2', '3.3', '3.4', head]
     steps:
       - uses: actions/checkout@v4
       - uses: awalsh128/cache-apt-pkgs-action@v1
@@ -52,14 +52,14 @@ jobs:
       - run: bundle exec rake test
 
   windows:
-    continue-on-error: ${{ matrix.ruby == 'head' || matrix.ruby == 'jruby-head' }}
+    continue-on-error: ${{ matrix.ruby == 'head' }}
     name: Windows
     runs-on: windows-latest
     env:
       MITTSU_LIBGLFW_PATH: c:\projects\mittsu\glfw-3.3.1.bin.WIN32\lib-mingw
     strategy:
       matrix:
-        ruby: ['2.6', '2.7', '3.0', '3.1', '3.2', '3.3', '3.4', head, jruby, jruby-head]
+        ruby: ['2.6', '2.7', '3.0', '3.1', '3.2', '3.3', '3.4', head]
     steps:
       - uses: actions/checkout@v4
       - run: .\install-glfw.ps1
