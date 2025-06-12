@@ -2,9 +2,9 @@ ENV["MITTSU_ENV"] = 'test'
 
 require 'simplecov'
 
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
   SimpleCov::Formatter::HTMLFormatter
-]
+)
 SimpleCov.start do
   add_filter "/test/"
   add_group 'GLFW', 'lib/mittsu/glfw'

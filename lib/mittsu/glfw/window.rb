@@ -6,6 +6,8 @@ require 'mittsu/glfw/lib'
 glfw_lib = Mittsu::GLFW::Lib.discover
 ::GLFW.load_lib(ENV["MITTSU_LIBGLFW_PATH"] || glfw_lib.path, Mittsu.debug?) unless Mittsu.test?
 
+require 'mittsu/glfw/debug' if Mittsu.debug?
+
 module Mittsu
   module GLFW
     class Window
