@@ -4,7 +4,7 @@ require 'open3'
 module Mittsu
   module GenericLib
     def discover
-      case GL.get_platform
+      case ::GL.get_platform
       when :OPENGL_PLATFORM_WINDOWS
         self::Windows.new
       when :OPENGL_PLATFORM_MACOSX
