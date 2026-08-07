@@ -23,11 +23,11 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.6.0'
   spec.requirements << 'OpenGL 3.3+ capable hardware and drivers'
 
-  spec.add_runtime_dependency 'opengl-bindings2'
-  spec.add_runtime_dependency 'fiddle', '~> 1.0'
+  # spec.add_runtime_dependency 'opengl-bindings2'
+  # spec.add_runtime_dependency 'fiddle', '~> 1.0'
   spec.add_runtime_dependency 'mittsu', '~> 0.5.0'
 
-  spec.add_development_dependency 'bundler', '~> 2.0'
+  spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'minitest', '~> 5.0'
   spec.add_development_dependency 'minitest-reporters', '~> 1.7'

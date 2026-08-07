@@ -1,16 +1,13 @@
-require 'opengl'
 require 'glfw'
-require 'fiddle'
+require 'ruby_gl'
+
+require 'mittsu/opengl/opengl_debug' if ENV['MITTSU_DEBUG'] == '1'
+GL = RubyGL
 
 require 'mittsu/opengl/version'
-require 'mittsu/opengl/lib'
-opengl_lib = Mittsu::OpenGL::Lib.discover
-GL.load_lib(ENV["MITTSU_LIBGL_PATH"] || opengl_lib.path, Mittsu.debug?)
 
 require 'mittsu/glfw/window'
-require 'mittsu/opengl/gl_debug' if Mittsu.debug?
 require 'mittsu/opengl/implementation'
-require 'mittsu/opengl/gl_extensions'
 require 'mittsu/opengl/helper'
 require 'mittsu/opengl/program'
 require 'mittsu/opengl/state'
@@ -32,10 +29,11 @@ module Mittsu
       :gamma_output, :shadow_map_enabled, :shadow_map_type, :shadow_map_cull_face, :shadow_map_debug, :shadow_map_cascade,
       :max_morph_targets, :max_morph_normals, :info, :pixel_ratio, :window, :width, :height, :state
 
-    attr_reader :logarithmic_depth_buffer, :programs, :light_renderer, :proj_screen_matrix
+    attr_reader :gl, :logarithmic_depth_buffer, :programs, :light_renderer, :proj_screen_matrix
 
     def initialize(parameters = {})
       puts "Mittsu OpenGL Renderer #{OpenGL::VERSION} (Mittsu #{Mittsu::VERSION})"
+      @gl = RubyGL::Context.new
 
       fetch_parameters(parameters)
 
@@ -55,7 +53,7 @@ module Mittsu
 
       create_window
 
-      @state = OpenGL::State.new
+      @state = OpenGL::State.new(gl)
 
       # TODO: load extensions??
 
@@ -104,7 +102,7 @@ module Mittsu
     end
 
     def set_scissor(x, y, width, height)
-      GL.Scissor(
+      gl.scissor(
         x * pixel_ratio,
         y * pixel_ratio,
         width * pixel_ratio,
@@ -113,7 +111,7 @@ module Mittsu
     end
 
     def enable_scissor_test(enable)
-      enable ? GL.Enable(GL::SCISSOR_TEST) : GL.Disable(GL::SCISSOR_TEST)
+      enable ? gl.enable(GL::SCISSOR_TEST) : gl.disable(GL::SCISSOR_TEST)
     end
 
     def object_in_frustum?(object)
@@ -152,15 +150,15 @@ module Mittsu
       bits |= GL::DEPTH_BUFFER_BIT if depth
       bits |= GL::STENCIL_BUFFER_BIT if stencil
 
-      GL.Clear(bits)
+      gl.clear(bits)
     end
 
     def clear_depth
-      GL.Clear(GL::DEPTH_BUFFER_BIT)
+      gl.clear(GL::DEPTH_BUFFER_BIT)
     end
 
     def clear_stencil
-      GL.Clear(GL::STENCIL_BUFFER_BIT)
+      gl.clear(GL::STENCIL_BUFFER_BIT)
     end
 
     def clear_target(render_target, color, depth, stencil)
@@ -321,8 +319,7 @@ module Mittsu
     def take_screenshot(filename, x: 0, y: 0, width: self.width, height: self.height)
       type_nb_bytes = 1 # for GL_UNSIGNED_BYTE (0 to 255)
       nb_channels = 3 # for GL_RGB
-      pixels = ' ' * width * height * type_nb_bytes * nb_channels
-      GL.ReadPixels(x, y, width, height, GL::RGB, GL::UNSIGNED_BYTE, pixels)
+      pixels = gl.read_pixels(x, y, width, height, GL::RGB, GL::UNSIGNED_BYTE)
       png = ChunkyPNG::Image.from_rgb_stream(width, height, pixels)
       png.flip_horizontally!
       png.save(filename)
@@ -335,24 +332,24 @@ module Mittsu
         r *= a; g *= a; b *= a
       end
 
-      GL.ClearColor(r, g, b, a)
+      gl.clear_color(r, g, b, a)
     end
 
     def set_default_gl_state
-      GL.ClearColor(0.0, 0.0, 0.0, 1.0)
-      GL.ClearDepth(1)
-      GL.ClearStencil(0)
+      gl.clear_color(0.0, 0.0, 0.0, 1.0)
+      gl.clear_depth(1)
+      gl.clear_stencil(0)
 
-      GL.Enable(GL::DEPTH_TEST)
-      GL.DepthFunc(GL::LEQUAL)
+      gl.enable(GL::DEPTH_TEST)
+      gl.depth_func(GL::LEQUAL)
 
-      GL.FrontFace(GL::CCW)
-      GL.CullFace(GL::BACK)
-      GL.Enable(GL::CULL_FACE)
+      gl.front_face(GL::CCW)
+      gl.cull_face(GL::BACK)
+      gl.enable(GL::CULL_FACE)
 
-      GL.Enable(GL::BLEND)
-      GL.BlendEquation(GL::FUNC_ADD)
-      GL.BlendFunc(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA)
+      gl.enable(GL::BLEND)
+      gl.blend_equation(GL::FUNC_ADD)
+      gl.blend_func(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA)
 
       default_target.use_viewport
 
@@ -464,20 +461,20 @@ module Mittsu
           buffer_type = (key == 'index') ? GL::ELEMENT_ARRAY_BUFFER : GL::ARRAY_BUFFER
 
           if attribute.buffer.nil?
-            attribute.buffer = GL.CreateBuffer
-            GL.BindBuffer(buffer_type, attribute.buffer)
-            GL.BufferData_easy(buffer_type, attribute.array, (attribute.is_a? DynamicBufferAttribute) ? GL::DYNAMIC_DRAW : GL::STATIC_DRAW)
+            attribute.buffer = gl.gen_buffer
+            gl.bind_buffer(buffer_type, attribute.buffer)
+            gl.buffer_data(buffer_type, attribute.array, (attribute.is_a? DynamicBufferAttribute) ? GL::DYNAMIC_DRAW : GL::STATIC_DRAW)
 
             attribute.needs_update = false
           elsif attribute.needs_update
-            GL.BindBuffer(buffer_type, attribute.buffer)
+            gl.bind_buffer(buffer_type, attribute.buffer)
             if attribute.update_range.nil? || attribute.update_range.count == -1 # Not using update ranged
-              GL.BufferSubData(buffer_type, 0, attribute.array)
+              gl.buffer_sub_data(buffer_type, 0, attribute.array)
             elsif attribute.udpate_range.count.zero?
               puts 'ERROR: Mittsu::OpenGL::Renderer#update_object: using update_range for Mittsu::DynamicBufferAttribute and marked as needs_update but count is 0, ensure you are using set methods or updating manually.'
             else
               # TODO: make a GL.BufferSubData_easy method
-              GL.BufferSubData(buffer_type, attribute.update_range.offset * attribute.array.BYTES_PER_ELEMENT, attribute.array.subarray(attribute.update_range.offset, attribute.update_range.offset + attribute.update_range.count))
+              gl.buffer_sub_data(buffer_type, attribute.update_range.offset * attribute.array.BYTES_PER_ELEMENT, attribute.array.subarray(attribute.update_range.offset, attribute.update_range.offset + attribute.update_range.count))
               attribute.update_range.count = 0 # reset range
             end
 
@@ -514,7 +511,7 @@ module Mittsu
       material_uniforms = material.shader[:uniforms]
 
       if program.id != @_current_program
-        GL.UseProgram(program.program)
+        gl.use_program(program.program)
         @_current_program = program.id
 
         refresh_program = true
@@ -606,7 +603,7 @@ module Mittsu
       object.load_uniforms_matrices(program_uniforms)
 
       if !program_uniforms['modelMatrix'].nil?
-        GL.UniformMatrix4fv(program_uniforms['modelMatrix'], 1, GL::FALSE, array_to_ptr_easy(object.matrix_world.elements))
+        gl.uniform_matrix4fv(program_uniforms['modelMatrix'], false, object.matrix_world.elements)
       end
 
       program
@@ -625,56 +622,56 @@ module Mittsu
         # AAAAAHHHHH!!!!! \o/ *flips table*
         case type
         when :int
-          GL.Uniform1i(location, value)
+          gl.uniform1i(location, value)
         when :ivec2
-          GL.Uniform2i(location, value[0], value[1])
+          gl.uniform2i(location, value[0], value[1])
         when :ivec3
-          GL.Uniform3i(location, value[0], value[1], value[2])
+          gl.uniform3i(location, value[0], value[1], value[2])
         when :ivec4
-          GL.Uniform4i(location, value[0], value[1], value[2], value[3])
+          gl.uniform4i(location, value[0], value[1], value[2], value[3])
         when :float
-          GL.Uniform1f(location, value)
+          gl.uniform1f(location, value)
         when :vec2
-          GL.Uniform2f(location, value[0], value[1])
+          gl.uniform2f(location, value[0], value[1])
         when :vec3, :color
-          GL.Uniform3f(location, value[0], value[1], value[2])
+          gl.uniform3f(location, value[0], value[1], value[2])
         when :vec4
-          GL.Uniform4f(location, value[0], value[1], value[2], value[3])
+          gl.uniform4f(location, value[0], value[1], value[2], value[3])
         when :'int[]'
-          GL.Uniform1iv(location, value.length, array_to_ptr_easy(value))
+          gl.uniform1iv(location, value)
         when :'ivec2[]'
-          GL.Uniform2iv(location, value.length / 2, array_to_ptr_easy(value))
+          gl.uniform2iv(location, value)
         when :'ivec3[]'
-          GL.Uniform3iv(location, value.length / 3, array_to_ptr_easy(value))
+          gl.uniform3iv(location, value)
         when :'ivec4[]'
-          GL.Uniform4iv(location, value.length / 4, array_to_ptr_easy(value))
+          gl.uniform4iv(location, value)
         when :'float[]'
-          GL.Uniform1fv(location, value.length, array_to_ptr_easy(value))
+          gl.uniform1fv(location, value)
         when :'vec2[]'
           if value[0].is_a? Vector2
             uniform.array ||= value.flat_map(&:to_a) # TODO: Float32Array
-            GL.Uniform2fv(location, value.length, array_to_ptr_easy(uniform.array))
+            gl.uniform2fv(location, uniform.array)
           else
-            GL.Uniform2fv(location, value.length / 2, array_to_ptr_easy(value))
+            gl.uniform2fv(location, value)
           end
         when :'vec3[]', :'color[]'
           if value.first.is_a?(Vector3) || value.first.is_a?(Color)
             uniform.array ||= value.flat_map(&:to_a) # TODO: Float32Array
-            GL.Uniform3fv(location, value.length, array_to_ptr_easy(uniform.array))
+            gl.uniform3fv(location, uniform.array)
           else
-            GL.Uniform3fv(location, value.length / 3, array_to_ptr_easy(value))
+            gl.uniform3fv(location, value)
           end
         when :'vec4[]'
           if value.first.is_a? Vector4
             uniform.array ||= value.flat_map(&:to_a) # TODO: Float32Array
-            GL.Uniform4fv(location, value.length, array_to_ptr_easy(uniform.array))
+            gl.uniform4fv(location, uniform.array)
           else
-            GL.Uniform4fv(location, value.length / 4, array_to_ptr_easy(value))
+            g.uniform4fv(location, value)
           end
         when :mat3
-          GL.UniformMatrix3fv(location, 1, GL::FALSE, array_to_ptr_easy(value.to_a))
+          gl.uniform_matrix3fv(location, false, value)
         when :mat4
-          GL.UniformMatrix4fv(location, 1, GL::FALSE, array_to_ptr_easy(value.to_a))
+          gl.uniform_matrix4fv(location, false, value)
         when :'mat3[]'
           if value.first.is_a? Matrix3
             uniform.array ||= Array.new(9 * value.length) # Float32Array
@@ -683,9 +680,9 @@ module Mittsu
               value[i].flatten_to_array_offset(uniform.array, i * 9)
             end
 
-            GL.UniformMatrix3fv(location, value.length, GL::FALSE, array_to_ptr_easy(uniform.array))
+            gl.uniform_matrix3fv(location, false, uniform.array)
           else
-            GL.UniformMatrix3fv(location, value.length / 9, GL::FALSE, array_to_ptr_easy(value))
+            gl.uniform_matrix3fv(location, false, value)
           end
         when :'mat4[]'
           if value.first.is_a? Matrix4
@@ -695,16 +692,16 @@ module Mittsu
               value[i].flatten_to_array_offset(uniform.array, i * 16)
             end
 
-            GL.UniformMatrix4fv(location, value.length, GL::FALSE, array_to_ptr_easy(uniform.array))
+            gl.uniform_matrix4fv(location, false, uniform.array)
           else
-            GL.UniformMatrix4fv(location, value.length / 16, GL::FALSE, array_to_ptr_easy(value))
+            gl.uniform_matrix4fv(location, false, value)
           end
         when :texture
           # single Mittsu::Texture (2d or cube)
           texture = value
           texture_unit = get_texture_unit
 
-          GL.Uniform1i(location, texture_unit)
+          gl.uniform1i(location, texture_unit)
 
           next unless texture
 
@@ -720,7 +717,7 @@ module Mittsu
             uniform.array[i] = get_texture_unit
           end
 
-          GL.Uniform1iv(location, uniform.array.length, array_to_ptr_easy(uniform.array))
+          gl.uniform1iv(location, uniform.array)
 
           uniform.value.each_with_index do |tex, i|
             tex_unit = uniform.array[i]
@@ -956,10 +953,10 @@ module Mittsu
     end
 
     def get_gpu_capabilities
-      @_max_textures = GL.GetParameter(GL::MAX_TEXTURE_IMAGE_UNITS)
-      @_max_vertex_textures = GL.GetParameter(GL::MAX_VERTEX_TEXTURE_IMAGE_UNITS)
-      @_max_texture_size = GL.GetParameter(GL::MAX_TEXTURE_SIZE)
-      @_max_cubemap_size = GL.GetParameter(GL::MAX_CUBE_MAP_TEXTURE_SIZE)
+      @_max_textures = gl.get_integerv(GL::MAX_TEXTURE_IMAGE_UNITS)
+      @_max_vertex_textures = gl.get_integerv(GL::MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+      @_max_texture_size = gl.get_integerv(GL::MAX_TEXTURE_SIZE)
+      @_max_cubemap_size = gl.get_integerv(GL::MAX_CUBE_MAP_TEXTURE_SIZE)
 
       @_supports_vertex_textures = @_max_vertex_textures > 0
       @_supports_bone_textures = @_supports_vertex_textures && false # TODO: extensions.get('OES_texture_float') ????
@@ -1008,19 +1005,19 @@ module Mittsu
     end
 
     def update_camera_uniforms(uniforms, camera, material)
-      GL.UniformMatrix4fv(uniforms['projectionMatrix'], 1, GL::FALSE, array_to_ptr_easy(camera.projection_matrix.elements))
+      gl.uniform_matrix4fv(uniforms['projectionMatrix'], false, camera.projection_matrix.elements)
 
       if @logarithmic_depth_buffer
-        GL.Uniform1f(uniforms['logDepthBuffFC'], 2.0 / ::Math.log(camera.far + 1.0) / Math::LN2)
+        gl.uniform1f(uniforms['logDepthBuffFC'], 2.0 / ::Math.log(camera.far + 1.0) / Math::LN2)
       end
 
       if material.needs_camera_position_uniform? && !uniforms['cameraPosition'].nil?
         @_vector3.set_from_matrix_position(camera.matrix_world)
-        GL.Uniform3f(uniforms['cameraPosition'], @_vector3.x, @_vector3.y, @_vector3.z)
+        gl.uniform3f(uniforms['cameraPosition'], @_vector3.x, @_vector3.y, @_vector3.z)
       end
 
       if material.needs_view_matrix_uniform? && !uniforms['viewMatrix'].nil?
-        GL.UniformMatrix4fv(uniforms['viewMatrix'], 1, GL::FALSE, array_to_ptr_easy(camera.matrix_world_inverse.elements))
+        gl.uniform_matrix4fv(uniforms['viewMatrix'], false, camera.matrix_world_inverse.elements)
       end
     end
 

@@ -1,273 +1,268 @@
-require 'opengl'
-require 'mittsu/opengl/lib'
+require 'ruby_gl'
 
-module Mittsu
-  module OpenGL::Lib
-    def self.discover
-      Struct.new(:path, :file).new(nil, nil)
-    end
-  end
-end
-
-module OpenGLStub
-  def self.load_lib(*args)
-    # stub
-  end
-
-  GL.constants.each do |c|
-    const_set c, GL.const_get(c)
-  end
-
-  class << self
-    GL::GL_FUNCTION_SYMBOLS.each do |m|
-      define_method(m.to_s.gsub(/^gl/, '').to_sym) do |*args|
-        nil
-      end
+module RubyGL
+  Context_ = Context
+  class StubContext
+    def initialize
+      @gl = Context_.new
     end
 
-    def GenVertexArrays(n, arrays)
+    def method_missing(name, *args)
+      return if @gl.respond_to?(name)
+      super
+    end
+
+    def respond_to_missing?(name)
+      @gl.respond_to?(name)
+    end
+
+    def gen_vertex_arrays(n)
       next_va = (@@_GenVertexArrays ||= 1)
       @@_GenVertexArrays += n
-      arrays[0...n*4] = n.times.map { |i| i + next_va }.pack('L'*n)
-      nil
+      n.times.map { |i| i + next_va }
     end
 
-    def GenBuffers(n, arrays)
+    def gen_vertex_array
+      gen_vertex_arrays(1).first
+    end
+
+    def gen_buffers(n)
       next_va = (@@_GenBuffers ||= 1)
       @@_GenBuffers += n
-      arrays[0...n*4] = n.times.map { |i| i + next_va }.pack('L'*n)
-      nil
+      n.times.map { |i| i + next_va }
     end
 
-    def GenTextures(n, arrays)
+    def gen_buffer
+      gen_buffers(1).first
+    end
+
+    def gen_textures(n)
       next_va = (@@_GenTextures ||= 1)
       @@_GenTextures += n
-      arrays[0...n*4] = n.times.map { |i| i + next_va }.pack('L'*n)
-      nil
+      n.times.map { |i| i + next_va }
     end
 
-    def GenFramebuffers(n, arrays)
+    def gen_texture
+      gen_textures(1).first
+    end
+
+    def gen_framebuffers(n)
       next_va = (@@_GenFramebuffers ||= 1)
       @@_GenFramebuffers += n
-      arrays[0...n*4] = n.times.map { |i| i + next_va }.pack('L'*n)
-      nil
+      n.times.map { |i| i + next_va }
     end
 
-    def GenRenderbuffers(n, arrays)
+    def gen_framebuffer
+      gen_framebuffers(1).first
+    end
+
+    def gen_renderbuffers(n)
       next_va = (@@_GenRenderbuffers ||= 1)
       @@_GenRenderbuffers += n
-      arrays[0...n*4] = n.times.map { |i| i + next_va }.pack('L'*n)
-      nil
+      n.times.map { |i| i + next_va }
     end
 
-    def GetBooleanv(_, params)
-      params[0] = [1].pack('C')
-      nil
+    def gen_renderbuffer
+      gen_renderbuffers(1).first
     end
 
-    def GetDoublev(_, params)
-      params[0..-1] = [rand].pack('D')
-      nil
+    def get_booleanv(_)
+      true
     end
 
-    def GetFloatv(_, params)
-      params[0..-1] = [rand].pack('F')
-      nil
+    def get_doublev(_)
+      rand
     end
 
-    def GetIntegerv(_, params)
-      params[0..-1] = [4096].pack('L')
-      nil
+    def get_floatv(_)
+      rand
     end
 
-    def GetShaderiv(_, _, params)
-      params[0..-1] = [4096].pack('L')
-      nil
+    def get_integerv(_)
+      4096
     end
-    alias :GetProgramiv :GetShaderiv
 
-    def GetShaderInfoLog(_, _, length, infoLog)
-      length[0...4] = [0].pack('L')
-      nil
+    def get_shaderiv(_, _)
+      4096
     end
-    alias :GetProgramInfoLog :GetShaderInfoLog
+    alias :get_programiv :get_shaderiv
 
-    def GetError()
+    def get_shader_info_log(_, _)
+      ""
+    end
+    alias :get_program_info_log :get_shader_info_log
+
+    def get_error()
       GL::NO_ERROR
     end
 
-    def FrontFace(mode)
+    def front_face(mode)
       @@_FrontFace = mode
     end
 
-    def CullFace(mode)
+    def cull_face(mode)
       @@_CullFace = mode
     end
 
-    def Enable(cap)
+    def enable(cap)
       (@@_Enable ||= {}).tap { |e| e[cap] = true }
     end
 
-    def Disable(cap)
+    def disable(cap)
       (@@_Enable ||= {}).tap { |e| e[cap] = false }
     end
 
-    def IsEnabled(cap)
+    def enabled?(cap)
       (@@_Enable ||= {})[cap]
     end
 
-    def GenLists(_range_)
+    def gen_lists(_range_)
       _range_
     end
 
-    def RenderMode(_mode_)
+    def render_mode(_mode_)
       0
     end
 
-    def IsList(_list_)
+    def list?(_list_)
       true
     end
 
-    def IsTexture(_texture_)
+    def texture?(_texture_)
       true
     end
 
-    def AreTexturesResident(_n_, _textures_, _residences_)
+    def textures_resident?(_n_, _textures_, _residences_)
       true
     end
 
-    def IsQuery(_id_)
+    def query?(_id_)
       true
     end
 
-    def IsBuffer(_buffer_)
+    def buffer?(_buffer_)
       true
     end
 
-    def UnmapBuffer(_target_)
+    def unmap_buffer(_target_)
       true
     end
 
-    def CreateProgram()
+    def create_program()
       (@@_CreateProgram ||= 1).tap { @@_CreateProgram += 1 }
     end
 
-    def CreateShader(_type_)
+    def create_shader(_type_)
       (@@_CreateShader ||= 1).tap { @@_CreateShader += 1 }
     end
 
-    def GetAttribLocation(_program_, _name_)
+    def get_attrib_location(_program_, _name_)
       (@@_GetAttribLocation ||= 1).tap { @@_GetAttribLocation += 1 }
     end
 
-    def GetUniformLocation(_program_, _name_)
+    def get_uniform_location(_program_, _name_)
       (@@_GetUniformLocation ||= 1).tap { @@_GetUniformLocation += 1 }
     end
 
-    def IsProgram(_program_)
+    def program?(_program_)
       true
     end
 
-    def IsShader(_shader_)
+    def shader?(_shader_)
       true
     end
 
-    def IsEnabledi(_target_, _index_)
+    def enabledi?(_target_, _index_)
       true
     end
 
-    def GetFragDataLocation(_program_, _name_)
+    def get_frag_fata_location(_program_, _name_)
       (@@_GetFragDataLocation ||= 1).tap { @@_GetFragDataLocation += 1 }
     end
 
-    def IsRenderbuffer(_renderbuffer_)
+    def renderbuffer?(_renderbuffer_)
       true
     end
 
-    def IsFramebuffer(_framebuffer_)
+    def framebuffer?(_framebuffer_)
       true
     end
 
-    def CheckFramebufferStatus(_target_)
+    def check_framebuffer_status(_target_)
       GL::FRAMEBUFFER_COMPLETE
     end
 
-    def IsVertexArray(_array_)
+    def vertex_array?(_array_)
       true
     end
 
-    def GetUniformBlockIndex(_program_, _uniformBlockName_)
+    def get_uniform_block_index(_program_, _uniformBlockName_)
       (@@_GetUniformBlockIndex ||= 1).tap { @@_GetUniformBlockIndex += 1 }
     end
 
-    def IsSync(_sync_)
+    def sync?(_sync_)
       true
     end
 
-    def ClientWaitSync(_sync_, _flags_, _timeout_)
+    def client_wait_sync(_sync_, _flags_, _timeout_)
       GL::ALREADY_SIGNALED
     end
 
-    def GetFragDataIndex(_program_, _name_)
+    def get_frag_data_index(_program_, _name_)
       (@@_GetFragDataIndex ||= 1).tap { @@_GetFragDataIndex += 1 }
     end
 
-    def IsSampler(_sampler_)
+    def sampler?(_sampler_)
       true
     end
 
-    def GetSubroutineUniformLocation(_program_, _shadertype_, _name_)
+    def get_subroutine_uniform_location(_program_, _shadertype_, _name_)
       (@@_GetSubroutineUniformLocation ||= 1).tap { @@_GetSubroutineUniformLocation += 1 }
     end
 
-    def GetSubroutineIndex(_program_, _shadertype_, _name_)
+    def get_subroutine_index(_program_, _shadertype_, _name_)
       (@@_GetSubroutineIndex ||= 1).tap { @@_GetSubroutineIndex += 1 }
     end
 
-    def IsTransformFeedback(_id_)
+    def transform_feedback?(_id_)
       true
     end
 
-    def CreateShaderProgramv(_type_, _count_, _strings_)
+    def create_shader_programv(_type_, _count_, _strings_)
       (@@_CreateShaderProgramv ||= 1).tap { @@_CreateShaderProgramv += 1 }
     end
 
-    def IsProgramPipeline(_pipeline_)
+    def program_pipeline?(_pipeline_)
       true
     end
 
-    def GetProgramResourceIndex(_program_, _programInterface_, _name_)
+    def get_program_resource_index(_program_, _programInterface_, _name_)
       (@@_GetProgramResourceIndex ||= 1).tap { @@_GetProgramResourceIndex += 1 }
     end
 
-    def GetProgramResourceLocation(_program_, _programInterface_, _name_)
+    def get_program_resource_location(_program_, _programInterface_, _name_)
       (@@_GetProgramResourceLocation ||= 1).tap { @@_GetProgramResourceLocation += 1 }
     end
 
-    def GetProgramResourceLocationIndex(_program_, _programInterface_, _name_)
+    def get_program_resource_location_index(_program_, _programInterface_, _name_)
       (@@_GetProgramResourceLocationIndex ||= 1).tap { @@_GetProgramResourceLocationIndex += 1 }
     end
 
-    def GetDebugMessageLog(_count_, _bufSize_, _sources_, _types_, _ids_, _severities_, _lengths_, _messageLog_)
-      0
+    def get_debug_message_log(_count_, _bufSize_, _sources_, _types_, _ids_, _severities_, _lengths_)
+      "DEBUG LOG"
     end
 
-    def UnmapNamedBuffer(_buffer_)
+    def unmap_named_buffer(_buffer_)
       true
     end
 
-    def CheckNamedFramebufferStatus(_framebuffer_, _target_)
+    def check_named_framebuffer_status(_framebuffer_, _target_)
       GL::FRAMEBUFFER_COMPLETE
     end
 
-    def GetGraphicsResetStatus()
+    def get_graphics_reset_status()
       GL::NO_ERROR
     end
-
-    def get_platform
-      :OPENGL_PLATFORM_TEST
-    end
   end
+  Context = StubContext
 end
-
-GL = OpenGLStub

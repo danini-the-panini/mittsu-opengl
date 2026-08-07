@@ -7,12 +7,12 @@ module Mittsu
         if needs_update?
           if !image[:_opengl_texture_cube]
             add_event_listener(:dispose, @renderer.method(:on_texture_dispose))
-            image[:_opengl_texture_cube] = GL.CreateTexture
+            image[:_opengl_texture_cube] = gl.gen_texture
             @renderer.info[:memory][:textures] += 1
           end
 
-          GL.ActiveTexture(GL::TEXTURE0 + slot)
-          GL.BindTexture(GL::TEXTURE_CUBE_MAP, image[:_opengl_texture_cube])
+          gl.active_texture(GL::TEXTURE0 + slot)
+          gl.bind_texture(GL::TEXTURE_CUBE_MAP, image[:_opengl_texture_cube])
 
           # GL.PixelStorei(GL::UNPACK_FLIP_Y_WEBGL, texture.flip_y)
 
@@ -39,9 +39,9 @@ module Mittsu
           6.times do |i|
             if !is_compressed
               if is_data_texture
-                GL.TexImage2D(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, cube_image[i].width, cube_image[i].height, 0, gl_format, gl_type, cube_image[i].data)
+                gl.tex_image_2d(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, cube_image[i].width, cube_image[i].height, 0, gl_format, gl_type, cube_image[i].data)
               else
-                GL.TexImage2D(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, cube_image[i].width, cube_image[i].height, 0, gl_format, gl_type, cube_image[i].data)
+                gl.tex_image_2d(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl_format, cube_image[i].width, cube_image[i].height, 0, gl_format, gl_type, cube_image[i].data)
               end
             else
               mipmaps = cube_image[i].mipmaps
@@ -49,27 +49,27 @@ module Mittsu
               mipmaps.each_with_index do |mipmap, j|
                 if format != RGBAFormat && format != RGBFormat
                   if @renderer.compressed_texture_formats.include?(gl_format)
-                    GL.CompressedTexImage2D(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, j, gl_format, mipmap.width, mipmap.height, 0, mipmap.data)
+                    gl.compressed_tex_image_2d(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, j, gl_format, mipmap.width, mipmap.height, 0, mipmap.data)
                   else
                     puts "WARNING: Mittsu::OpenGLCubeTexture: Attempt to load unsupported compressed texture format in #set"
                   end
                 else
-                  GL.TexImage2D(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, j, gl_format, mipmap.width, mipmap.height, 0, gl_format, gl_type, mipmap.data)
+                  gl.tex_image_2d(GL::TEXTURE_CUBE_MAP_POSITIVE_X + i, j, gl_format, mipmap.width, mipmap.height, 0, gl_format, gl_type, mipmap.data)
                 end
               end
             end
           end
 
           if generate_mipmaps && is_image_power_of_two
-            GL.GenerateMipmap(GL::TEXTURE_CUBE_MAP)
+            gl.generate_mipmap(GL::TEXTURE_CUBE_MAP)
           end
 
           self.needs_update = false
 
           on_update.call if on_update
         else
-          GL.ActiveTexture(GL::TEXTURE0 + slot)
-          GL.BindTexture(GL::TEXTURE_CUBE_MAP, image[:_opengl_texture_cube])
+          gl.active_texture(GL::TEXTURE0 + slot)
+          gl.bind_texture(GL::TEXTURE_CUBE_MAP, image[:_opengl_texture_cube])
         end
       end
     end

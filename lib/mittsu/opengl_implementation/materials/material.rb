@@ -38,6 +38,10 @@ module Mittsu
       @renderer.state.set_polygon_offset(polygon_offset, polygon_offset_factor, polygon_offset_units)
     end
 
+    def gl
+      @renderer.gl
+    end
+
     def needs_face_normals?
       shading == FlatShading
     end
@@ -123,7 +127,7 @@ module Mittsu
       #  - limit here is ANGLE's 254 max uniform vectors
       #    (up to 54 should be safe)
 
-      n_vertex_uniforms = (GL.GetParameter(GL::MAX_VERTEX_UNIFORM_COMPONENTS) / 4.0).floor
+      n_vertex_uniforms = (gl.get_integerv(GL::MAX_VERTEX_UNIFORM_COMPONENTS) / 4.0).floor
       n_vertex_matrices = ((n_vertex_uniforms - 20) / 4.0).floor
 
       max_bones = n_vertex_matrices

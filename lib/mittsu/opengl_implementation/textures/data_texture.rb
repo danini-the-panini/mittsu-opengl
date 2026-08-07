@@ -11,10 +11,10 @@ module Mittsu
 
       if !mipmaps.empty? && is_image_power_of_two
         mipmaps.each_with_index do |mipmap, i|
-          GL.TexImage2D(GL::TEXTURE_2D, i, gl_format, mipmap.width, mipmap.height, 0, gl_format, gl_type, mipmap.data)
+          gl.tex_image_2d(GL::TEXTURE_2D, i, gl_format, mipmap.width, mipmap.height, 0, gl_format, gl_type, mipmap.data)
         end
       else
-        GL.TexImage2D(GL::TEXTURE_2D, 0, gl_format, image.width, image.height, 0, gl_format, gl_type, image.data)
+        gl.tex_image_2d(GL::TEXTURE_2D, 0, gl_format, image.width, image.height, 0, gl_format, gl_type, image.data)
       end
     end
   end

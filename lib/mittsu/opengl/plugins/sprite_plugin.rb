@@ -2,17 +2,17 @@ module Mittsu
   class SpritePlugin
     include OpenGL::Helper
 
-    VERTICES = [
+    VERTICES = TypedArray::Float32.new([
       -0.5, -0.5, 0.0, 0.0,
        0.5, -0.5, 1.0, 0.0,
        0.5,  0.5, 1.0, 1.0,
       -0.5,  0.5, 0.0, 1.0
-    ] # Float32Array
+    ])
 
-    FACES = [
+    FACES = TypedArray::Uint16.new([
       0, 1, 2,
       0, 2, 3
-    ] # Uint16Array
+    ])
 
     def initialize(renderer, sprites)
       @renderer = renderer
@@ -23,6 +23,10 @@ module Mittsu
       @sprite_position = Vector3.new
       @sprite_rotation = Quaternion.new
       @sprite_scale = Vector3.new
+    end
+
+    def gl
+      @renderer.gl
     end
 
     def render(scene, camera)
@@ -36,7 +40,7 @@ module Mittsu
 
       render_all_sprites(scene)
 
-      GL.Enable(GL::CULL_FACE)
+      gl.enable(GL::CULL_FACE)
       @renderer.reset_gl_state
     end
 
@@ -53,60 +57,60 @@ module Mittsu
     end
 
     def create_vertex_array_object
-      @vertex_array_object = GL.CreateVertexArray
-      GL.BindVertexArray(@vertex_array_object)
+      @vertex_array_object = gl.gen_vertex_array
+      gl.bind_vertex_array(@vertex_array_object)
 
-      @vertex_buffer = GL.CreateBuffer
-      @element_buffer = GL.CreateBuffer
+      @vertex_buffer = gl.gen_buffer
+      @element_buffer = gl.gen_buffer
 
-      GL.BindBuffer(GL::ARRAY_BUFFER, @vertex_buffer)
-      GL.BufferData_easy(GL::ARRAY_BUFFER, VERTICES, GL::STATIC_DRAW)
+      gl.bind_buffer(GL::ARRAY_BUFFER, @vertex_buffer)
+      gl.buffer_data(GL::ARRAY_BUFFER, VERTICES, GL::STATIC_DRAW)
 
-      GL.BindBuffer(GL::ELEMENT_ARRAY_BUFFER, @element_buffer)
-      GL.BufferData_easy(GL::ELEMENT_ARRAY_BUFFER, FACES, GL::STATIC_DRAW)
+      gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, @element_buffer)
+      gl.buffer_data(GL::ELEMENT_ARRAY_BUFFER, FACES, GL::STATIC_DRAW)
     end
 
     def create_program
-      @program = GL.CreateProgram
+      @program = gl.create_program
 
-      vertex_shader = OpenGL::Shader.new(GL::VERTEX_SHADER, File.read(File.join(__dir__, 'sprite_vertex.glsl')))
-      fragment_shader = OpenGL::Shader.new(GL::FRAGMENT_SHADER, File.read(File.join(__dir__, 'sprite_fragment.glsl')))
+      vertex_shader = OpenGL::Shader.new(GL::VERTEX_SHADER, File.read(File.join(__dir__, 'sprite_vertex.glsl')), @renderer)
+      fragment_shader = OpenGL::Shader.new(GL::FRAGMENT_SHADER, File.read(File.join(__dir__, 'sprite_fragment.glsl')), @renderer)
 
-      GL.AttachShader(@program, vertex_shader.shader)
-      GL.AttachShader(@program, fragment_shader.shader)
+      gl.attach_shader(@program, vertex_shader.shader)
+      gl.attach_shader(@program, fragment_shader.shader)
 
-      GL.LinkProgram(@program)
+      gl.link_program(@program)
     end
 
     def init_attributes
       @attributes = {
-        position: GL.GetAttribLocation(@program, 'position'),
-        uv: GL.GetAttribLocation(@program, 'uv')
+        position: gl.get_attrib_location(@program, 'position'),
+        uv: gl.get_attrib_location(@program, 'uv')
       }
     end
 
     def init_uniforms
       @uniforms = {
-        uvOffset: GL.GetUniformLocation(@program, 'uvOffset'),
-        uvScale: GL.GetUniformLocation(@program, 'uvScale'),
+        uvOffset: gl.get_uniform_location(@program, 'uvOffset'),
+        uvScale: gl.get_uniform_location(@program, 'uvScale'),
 
-        rotation: GL.GetUniformLocation(@program, 'rotation'),
-        scale: GL.GetUniformLocation(@program, 'scale'),
+        rotation: gl.get_uniform_location(@program, 'rotation'),
+        scale: gl.get_uniform_location(@program, 'scale'),
 
-        color: GL.GetUniformLocation(@program, 'color'),
-        map: GL.GetUniformLocation(@program, 'map'),
-        opacity: GL.GetUniformLocation(@program, 'opacity'),
+        color: gl.get_uniform_location(@program, 'color'),
+        map: gl.get_uniform_location(@program, 'map'),
+        opacity: gl.get_uniform_location(@program, 'opacity'),
 
-        modelViewMatrix: GL.GetUniformLocation(@program, 'modelViewMatrix'),
-        projectionMatrix: GL.GetUniformLocation(@program, 'projectionMatrix'),
+        modelViewMatrix: gl.get_uniform_location(@program, 'modelViewMatrix'),
+        projectionMatrix: gl.get_uniform_location(@program, 'projectionMatrix'),
 
-        fogType: GL.GetUniformLocation(@program, 'fogType'),
-        fogDensity: GL.GetUniformLocation(@program, 'fogDensity'),
-        fogNear: GL.GetUniformLocation(@program, 'fogNear'),
-        fogFar: GL.GetUniformLocation(@program, 'fogFar'),
-        fogColor: GL.GetUniformLocation(@program, 'fogColor'),
+        fogType: gl.get_uniform_location(@program, 'fogType'),
+        fogDensity: gl.get_uniform_location(@program, 'fogDensity'),
+        fogNear: gl.get_uniform_location(@program, 'fogNear'),
+        fogFar: gl.get_uniform_location(@program, 'fogFar'),
+        fogColor: gl.get_uniform_location(@program, 'fogColor'),
 
-        alphaTest: GL.GetUniformLocation(@program, 'alphaTest')
+        alphaTest: gl.get_uniform_location(@program, 'alphaTest')
       }
     end
 
@@ -119,27 +123,27 @@ module Mittsu
     end
 
     def setup_gl_for_render(camera)
-      GL.UseProgram(@program)
+      gl.use_program(@program)
 
-      GL.Disable(GL::CULL_FACE)
-      GL.Enable(GL::BLEND)
+      gl.disable(GL::CULL_FACE)
+      gl.enable(GL::BLEND)
 
-      GL.BindVertexArray(@vertex_array_object)
+      gl.bind_vertex_array(@vertex_array_object)
 
-      GL.EnableVertexAttribArray(@attributes[:position])
-      GL.EnableVertexAttribArray(@attributes[:uv])
+      gl.enable_vertex_attrib_array(@attributes[:position])
+      gl.enable_vertex_attrib_array(@attributes[:uv])
 
-      GL.BindBuffer(GL::ARRAY_BUFFER, @vertex_buffer)
+      gl.bind_buffer(GL::ARRAY_BUFFER, @vertex_buffer)
 
-      GL.VertexAttribPointer(@attributes[:position], 2, GL::FLOAT, GL::FALSE, 2 * 8, 0)
-      GL.VertexAttribPointer(@attributes[:uv], 2, GL::FLOAT, GL::FALSE, 2 * 8, 8)
+      gl.vertex_attrib_pointer(@attributes[:position], 2, GL::FLOAT, false, 2 * 8, 0)
+      gl.vertex_attrib_pointer(@attributes[:uv], 2, GL::FLOAT, false, 2 * 8, 8)
 
-      GL.BindBuffer(GL::ELEMENT_ARRAY_BUFFER, @element_buffer)
+      gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, @element_buffer)
 
-      GL.UniformMatrix4fv(@uniforms[:projectionMatrix], 1, GL::FALSE, array_to_ptr_easy(camera.projection_matrix.elements))
+      gl.uniform_matrix4fv(@uniforms[:projectionMatrix], false, camera.projection_matrix.elements)
 
-      GL.ActiveTexture(GL::TEXTURE0)
-      GL.Uniform1i(@uniforms[:map], 0)
+      gl.active_texture(GL::TEXTURE0)
+      gl.uniform1i(@uniforms[:map], 0)
     end
 
     def setup_fog(scene)
@@ -148,24 +152,24 @@ module Mittsu
       fog = scene.fog
 
       if fog
-        GL.Uniform3f(@uniforms[:fogColor], fog.color.r, fog.color.g, fog.color.b)
+        gl.uniform3f(@uniforms[:fogColor], fog.color.r, fog.color.g, fog.color.b)
 
         if fog.is_a?(Fog)
-          GL.Uniform1f(@uniforms[:fogNear], fog.near)
-          GL.Uniform1f(@uniforms[:fogFar], fog.far)
+          gl.uniform1f(@uniforms[:fogNear], fog.near)
+          gl.uniform1f(@uniforms[:fogFar], fog.far)
 
-          GL.Uniform1i(@uniforms[:fogType], 1)
+          gl.uniform1i(@uniforms[:fogType], 1)
           @old_fog_type = 1
           @scene_fog_type = 1
         elsif fog.is_a?(FogExp2)
-          GL.Uniform1f(@uniforms[:fogDensity], fog.density)
+          gl.uniform1f(@uniforms[:fogDensity], fog.density)
 
-          GL.Uniform1i(@uniforms[:fogType], 2)
+          gl.uniform1i(@uniforms[:fogType], 2)
           @old_fog_type = 2
           @scene_fog_type = 2
         end
       else
-        GL.Uniform1i(@uniforms[:fogType], 0)
+        gl.uniform1i(@uniforms[:fogType], 0)
         @old_fog_type = 0
         @scene_fog_type = 0
       end
@@ -199,7 +203,7 @@ module Mittsu
         end
 
         # draw elements
-        GL.DrawElements(GL::TRIANGLES, 6, GL::UNSIGNED_INT, 0) # GL::UNSIGNED_SHORT
+        gl.draw_elements(GL::TRIANGLES, 6, GL::UNSIGNED_SHORT, 0)
       end
     end
 
@@ -211,34 +215,34 @@ module Mittsu
       end
 
       if @old_fog_type != fog_type
-        GL.Uniform1(@uniforms[:fogType], fog_type)
+        gl.uniform1(@uniforms[:fogType], fog_type)
         @old_fog_type = fog_type
       end
     end
 
     def set_uv_uniforms(material)
       if !material.map.nil?
-        GL.Uniform2f(@uniforms[:uvOffset], material.map.offset.x, material.map.offset.y)
-        GL.Uniform2f(@uniforms[:uvScale], material.map.repeat.x, material.map.repeat.y)
+        gl.uniform2f(@uniforms[:uvOffset], material.map.offset.x, material.map.offset.y)
+        gl.uniform2f(@uniforms[:uvScale], material.map.repeat.x, material.map.repeat.y)
       else
-        GL.Uniform2f(@uniforms[:uvOffset], 0.0, 0.0)
-        GL.Uniform2f(@uniforms[:uvScale], 1.0, 1.0)
+        gl.uniform2f(@uniforms[:uvOffset], 0.0, 0.0)
+        gl.uniform2f(@uniforms[:uvScale], 1.0, 1.0)
       end
     end
 
     def set_color_uniforms(material)
-      GL.Uniform1f(@uniforms[:opacity], material.opacity)
-      GL.Uniform3f(@uniforms[:color], material.color.r, material.color.g, material.color.b)
-      GL.Uniform1f(@uniforms[:alphaTest], material.alpha_test)
+      gl.uniform1f(@uniforms[:opacity], material.opacity)
+      gl.uniform3f(@uniforms[:color], material.color.r, material.color.g, material.color.b)
+      gl.uniform1f(@uniforms[:alphaTest], material.alpha_test)
     end
 
     def set_transform_uniforms(sprite)
-      GL.UniformMatrix4fv(@uniforms[:modelViewMatrix], 1, GL::FALSE, array_to_ptr_easy(sprite.model_view_matrix.elements))
+      gl.uniform_matrix4fv(@uniforms[:modelViewMatrix], false, sprite.model_view_matrix.elements)
 
       sprite.matrix_world.decompose(@sprite_position, @sprite_rotation, @sprite_scale)
 
-      GL.Uniform1f(@uniforms[:rotation], sprite.material.rotation)
-      GL.Uniform2fv(@uniforms[:scale], 1, array_to_ptr_easy([@sprite_scale.x, @sprite_scale.y]))
+      gl.uniform1f(@uniforms[:rotation], sprite.material.rotation)
+      gl.uniform2fv(@uniforms[:scale], TypedArray::Float32.new([@sprite_scale.x, @sprite_scale.y]))
     end
 
     def set_blend_mode(material)

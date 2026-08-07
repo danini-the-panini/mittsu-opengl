@@ -53,6 +53,10 @@ module Mittsu
       end
     end
 
+    def gl
+      @renderer.gl
+    end
+
     def project(renderer)
       puts " --- PROJECT #{self.name}" if DEBUG
       @renderer = renderer
@@ -89,14 +93,10 @@ module Mittsu
     end
 
     def load_uniforms_matrices(uniforms)
-      GL.UniformMatrix4fv(uniforms['modelViewMatrix'],
-                         1, GL::FALSE,
-                         array_to_ptr_easy(@model_view_matrix.elements))
+      gl.uniform_matrix4fv(uniforms['modelViewMatrix'], false, @model_view_matrix.elements)
 
       if uniforms['normalMatrix']
-        GL.UniformMatrix3fv(uniforms['normalMatrix'],
-                           1, GL::FALSE,
-                           array_to_ptr_easy(@normal_matrix.elements))
+        gl.uniform_matrix3fv(uniforms['normalMatrix'], false, @normal_matrix.elements)
       end
     end
 

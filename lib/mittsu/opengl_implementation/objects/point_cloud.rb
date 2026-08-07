@@ -1,7 +1,7 @@
 module Mittsu
   class PointCloud
     def render_buffer(camera, lights, fog, material, geometry_group, update_buffers)
-      GL.DrawArrays(GL::POINTS, 0, geometry_group.particle_count)
+      gl.draw_arrays(GL::POINTS, 0, geometry_group.particle_count)
 
       @renderer.info[:render][:calls] += 1
       @renderer.info[:render][:points] += geometry_group.particle_count

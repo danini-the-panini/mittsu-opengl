@@ -1,6 +1,7 @@
 ENV["MITTSU_ENV"] = 'test'
 
 require 'simplecov'
+require 'bundler/setup'
 
 SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(
   SimpleCov::Formatter::HTMLFormatter

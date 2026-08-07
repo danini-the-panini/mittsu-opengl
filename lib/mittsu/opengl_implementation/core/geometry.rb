@@ -50,9 +50,9 @@ module Mittsu
     def init_line_buffers(object)
       nvertices = @vertices.length
 
-      @vertex_array = Array.new(nvertices * 3, 0.0) # Float32Array
-      @color_array = Array.new(nvertices * 3, 0.0) # Float32Array
-      @line_distance_array = Array.new(nvertices, 0.0) # Float32Array
+      @vertex_array = TypedArray::Float32.new(nvertices * 3, 0.0)
+      @color_array = TypedArray::Float32.new(nvertices * 3, 0.0)
+      @line_distance_array = TypedArray::Float32.new(nvertices, 0.0)
 
       @line_count = nvertices
 
@@ -62,8 +62,8 @@ module Mittsu
     def init_particle_buffers(object)
       nvertices = @vertices.length
 
-      @vertex_array = Array.new(nvertices * 3, 0.0) # Float32Array
-      @color_array = Array.new(nvertices * 3, 0.0) # Float32Array
+      @vertex_array = TypedArray::Float32.new(nvertices * 3, 0.0)
+      @color_array = TypedArray::Float32.new(nvertices * 3, 0.0)
 
       @particle_count = nvertices
 
@@ -71,20 +71,20 @@ module Mittsu
     end
 
     def create_line_buffers
-      @vertex_array_object = GL.CreateVertexArray
+      @vertex_array_object = gl.gen_vertex_array
 
-      @vertex_buffer = GL.CreateBuffer
-      @color_buffer = GL.CreateBuffer
-      @line_distance_buffer = GL.CreateBuffer
+      @vertex_buffer = gl.gen_buffer
+      @color_buffer = gl.gen_buffer
+      @line_distance_buffer = gl.gen_buffer
 
       @renderer.info[:memory][:geometries] += 1
     end
 
     def create_particle_buffers
-      @vertex_array_object = GL.CreateVertexArray
+      @vertex_array_object = gl.gen_vertex_array
 
-      @vertex_buffer = GL.CreateBuffer
-      @color_buffer = GL.CreateBuffer
+      @vertex_buffer = gl.gen_buffer
+      @color_buffer = gl.gen_buffer
 
       @renderer.info[:memory][:geometries] += 1
     end
@@ -99,8 +99,8 @@ module Mittsu
           @vertex_array[offset + 2] = vertex.z
         end
 
-        GL.BindBuffer(GL::ARRAY_BUFFER, @vertex_buffer)
-        GL.BufferData_easy(GL::ARRAY_BUFFER, @vertex_array, hint)
+        gl.bind_buffer(GL::ARRAY_BUFFER, @vertex_buffer)
+        gl.buffer_data(GL::ARRAY_BUFFER, @vertex_array, hint)
       end
 
       if @colors_need_update
@@ -112,8 +112,8 @@ module Mittsu
           @color_array[offset + 2] = color.b
         end
 
-        GL.BindBuffer(GL::ARRAY_BUFFER, @color_buffer)
-        GL.BufferData_easy(GL::ARRAY_BUFFER, @color_array, hint)
+        gl.bind_buffer(GL::ARRAY_BUFFER, @color_buffer)
+        gl.buffer_data(GL::ARRAY_BUFFER, @color_array, hint)
       end
 
       if @line_distances_need_update
@@ -121,8 +121,8 @@ module Mittsu
           @line_distance_array[d] = l
         end
 
-        GL.BindBuffer(GL::ARRAY_BUFFER, @line_distance_buffer)
-        GL.BufferData_easy(GL::ARRAY_BUFFER, @line_distance_array, hint)
+        gl.bind_buffer(GL::ARRAY_BUFFER, @line_distance_buffer)
+        gl.buffer_data(GL::ARRAY_BUFFER, @line_distance_array, hint)
       end
 
       if @custom_attributes
@@ -172,8 +172,8 @@ module Mittsu
             end
           end
 
-          GL.BindBuffer(GL::ARRAY_BUFFER, custom_attribute.buffer)
-          GL.BufferData_easy(GL::ARRAY_BUFFER, custom_attribute.array, hint)
+          gl.bind_buffer(GL::ARRAY_BUFFER, custom_attribute.buffer)
+          gl.buffer_data(GL::ARRAY_BUFFER, custom_attribute.array, hint)
 
           custom_attribute.needs_update = false
         end
@@ -191,8 +191,8 @@ module Mittsu
         end
 
 
-        GL.BindBuffer(GL::ARRAY_BUFFER, @vertex_buffer)
-        GL.BufferData_easy(GL::ARRAY_BUFFER, @vertex_array, hint)
+        gl.bind_buffer(GL::ARRAY_BUFFER, @vertex_buffer)
+        gl.buffer_data(GL::ARRAY_BUFFER, @vertex_array, hint)
       end
 
       if @colors_need_update
@@ -204,8 +204,8 @@ module Mittsu
           @color_array[offset + 2] = color.b
         end
 
-        GL.BindBuffer(GL::ARRAY_BUFFER, @color_buffer)
-        GL.BufferData_easy(GL::ARRAY_BUFFER, @color_array, hint)
+        gl.bind_buffer(GL::ARRAY_BUFFER, @color_buffer)
+        gl.buffer_data(GL::ARRAY_BUFFER, @color_array, hint)
       end
 
       if @custom_attribute
@@ -254,8 +254,8 @@ module Mittsu
             end
           end
 
-          GL.BindBuffer(GL::ARRAY_BUFFER, customAttribute.buffer)
-          GL.BufferData(GL::ARRAY_BUFFER, customAttribute.array, hint)
+          gl.bind_buffer(GL::ARRAY_BUFFER, customAttribute.buffer)
+          gl.buffer_data(GL::ARRAY_BUFFER, customAttribute.array, hint)
 
           custom_attribute.needs_update = false
         end
@@ -330,9 +330,9 @@ module Mittsu
 
             attribute.size = size
 
-            attribute.array = Array.new(nvertices * size) # Float32Array
+            attribute.array = TypedArray::Float32.new(nvertices * size)
 
-            attribute.buffer = GL.CreateBuffer
+            attribute.buffer = gl.gen_buffer
             attribute.buffer.belongs_to_attribute = name
 
             attribute.needs_update = true

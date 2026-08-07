@@ -1,25 +1,5 @@
 module Mittsu
   module OpenGL::Helper
-    def array_to_ptr_easy(data)
-      if data.first.is_a?(Float)
-        size_of_element = Fiddle::SIZEOF_FLOAT
-        format_of_element = 'F'
-        # data.map!{ |d| d.nil? ? 0.0 : d }
-      else
-        size_of_element = Fiddle::SIZEOF_INT
-        format_of_element = 'L'
-        # data.map!{ |d| d.nil? ? 0 : d }
-      end
-      size = data.length * size_of_element
-      array_to_ptr(data, size, format_of_element)
-    end
-
-    def array_to_ptr(data, size, format)
-      ptr = Fiddle::Pointer.malloc(size)
-      ptr[0,size] = data.pack(format * data.length)
-      ptr
-    end
-
     class << self
       def mark_uniforms_lights_needs_update(uniforms, value)
         uniforms['ambientLightColor'].needs_update = value

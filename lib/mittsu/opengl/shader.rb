@@ -2,16 +2,14 @@ module Mittsu
   class OpenGL::Shader
     attr_reader :shader
 
-    def initialize(type, string)
-      @shader = GL.CreateShader(type)
+    def initialize(type, string, renderer)
+      @renderer = renderer
+      @shader = gl.create_shader(type)
       # filename = type == GL::VERTEX_SHADER ? 'vertex.glsl' : 'fragment.glsl'
       # File.write filename, string
 
-      string_pointer = Fiddle::Pointer[string]
-      string_length = Fiddle::Pointer[string.length]
-
-      GL.ShaderSource(@shader, 1, string_pointer.ref, string_length.ref)
-      GL.CompileShader(@shader)
+      gl.shader_source(@shader, string)
+      gl.compile_shader(@shader)
 
       if !compile_status
         puts "ERROR: Mittsu::OpenGL::Shader: Shader couldn't compile"
@@ -24,26 +22,19 @@ module Mittsu
       end
     end
 
+    def gl
+      @renderer.gl
+    end
+
     private
 
     def compile_status
-      ptr = ' '*8
-      GL.GetShaderiv @shader, GL::COMPILE_STATUS, ptr
-      ptr.unpack('L')[0]
+      gl.get_shaderiv @shader, GL::COMPILE_STATUS
     end
 
     def shader_info_log
-      ptr = ' '*8
-      GL.GetShaderiv @shader, GL::INFO_LOG_LENGTH, ptr
-      length = ptr.unpack('L')[0]
-
-      if length > 0
-        log = ' '*length
-        GL.GetShaderInfoLog @shader, length, ptr, log
-        log.unpack("A#{length}")[0]
-      else
-        ''
-      end
+      length = gl.get_shaderiv @shader, GL::INFO_LOG_LENGTH
+      gl.get_shader_info_log @shader, length
     end
 
     def add_line_numbers(string)

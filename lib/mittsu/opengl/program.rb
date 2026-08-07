@@ -19,10 +19,14 @@ module Mittsu
       @used_times = 2
     end
 
+    def gl
+      @renderer.gl
+    end
+
     private
 
     def compile_and_link_program(material, parameters)
-      @program = GL.CreateProgram
+      @program = gl.create_program
 
       # TODO: necessary for OpenGL?
       # index0_attribute_name = material.index0_attribute_name
@@ -44,7 +48,7 @@ module Mittsu
       #   GL.BindAttributeLocation(program, 0, index0_attribute_name)
       # end
 
-      GL.LinkProgram(@program)
+      gl.link_program(@program)
       check_for_link_errors
       post_link_clean_up
     end
@@ -63,30 +67,19 @@ module Mittsu
     end
 
     def link_status
-      ptr = ' '*8
-      GL.GetProgramiv @program, GL::LINK_STATUS, ptr
-      ptr.unpack('L')[0]
+      gl.get_programiv @program, GL::LINK_STATUS
     end
 
     def program_info_log
-      ptr = ' '*8
-      GL.GetProgramiv @program, GL::INFO_LOG_LENGTH, ptr
-      length = ptr.unpack('L')[0]
-
-      if length > 0
-        log = ' '*length
-        GL.GetProgramInfoLog @program, length, ptr, log
-        log.unpack("A#{length}")[0]
-      else
-        ''
-      end
+      length = gl.get_programiv @program, GL::INFO_LOG_LENGTH
+      gl.get_program_info_log @program, length
     end
 
     def check_for_link_errors
       log_info = program_info_log
 
       if !link_status
-        puts "ERROR: Mittsu::OpenGL::Program: shader error: #{GL.GetError}, GL::INVALID_STATUS, #{GL.GetProgramParameter(program, GL::VALIDATE_STATUS)}, GL.GetProgramParameterInfoLog, #{log_info}"
+        puts "ERROR: Mittsu::OpenGL::Program: shader error: #{gl.get_error}, GL::INVALID_STATUS, #{gl.get_program_parameter(program, GL::VALIDATE_STATUS)}, GL.GetProgramParameterInfoLog, #{log_info}"
       end
 
       if !log_info.empty?
@@ -165,11 +158,11 @@ module Mittsu
         prefix_fragment = File.read(File.expand_path('../shader/templates/fragment.glsl.erb', __FILE__))
       end
 
-      @vertex_shader = OpenGL::Shader.new(GL::VERTEX_SHADER, compile_shader_template(prefix_vertex + material.shader[:vertex_shader], binding))
-      @fragment_shader = OpenGL::Shader.new(GL::FRAGMENT_SHADER, compile_shader_template(prefix_fragment + material.shader[:fragment_shader], binding))
+      @vertex_shader = OpenGL::Shader.new(GL::VERTEX_SHADER, compile_shader_template(prefix_vertex + material.shader[:vertex_shader], binding), @renderer)
+      @fragment_shader = OpenGL::Shader.new(GL::FRAGMENT_SHADER, compile_shader_template(prefix_fragment + material.shader[:fragment_shader], binding), @renderer)
 
-      GL.AttachShader(@program, @vertex_shader.shader)
-      GL.AttachShader(@program, @fragment_shader.shader)
+      gl.attach_shader(@program, @vertex_shader.shader)
+      gl.attach_shader(@program, @fragment_shader.shader)
     end
 
     def compile_shader_template(template, b)
@@ -177,8 +170,8 @@ module Mittsu
     end
 
     def post_link_clean_up
-      GL.DeleteShader(@vertex_shader.shader)
-      GL.DeleteShader(@fragment_shader.shader)
+      gl.delete_shader(@vertex_shader.shader)
+      gl.delete_shader(@fragment_shader.shader)
     end
 
     def cache_uniform_locations(uniforms, parameters)
@@ -212,7 +205,7 @@ module Mittsu
 
       @uniforms = {}
       identifiers.each do |id|
-        @uniforms[id] = GL.GetUniformLocation(program, id)
+        @uniforms[id] = gl.get_uniform_location(program, id)
       end
     end
 
@@ -243,7 +236,7 @@ module Mittsu
 
       @attributes = {}
       identifiers.each do |id|
-        @attributes[id] = GL.GetAttribLocation(program, id)
+        @attributes[id] = gl.get_attrib_location(program, id)
       end
     end
   end

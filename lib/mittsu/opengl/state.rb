@@ -1,6 +1,9 @@
 module Mittsu
   class OpenGL::State
-    def initialize
+    attr_reader :gl
+
+    def initialize(gl)
+      @gl = gl
       @new_attributes = Array.new(16) # Uint8Array
       @enabled_attributes = Array.new(16) # Uint8Array
 
@@ -34,11 +37,11 @@ module Mittsu
     end
 
     def enable_attribute(attribute)
-      GL.EnableVertexAttribArray(attribute)
+      gl.enable_vertex_attrib_array(attribute)
       @new_attributes[attribute] = true
 
       if !@enabled_attributes[attribute]
-        # GL.EnableVertexAttribArray(attribute)
+        # gl.enable_vertex_attrib_array(attribute)
         @enabled_attributes[attribute] = true
       end
     end
@@ -46,7 +49,7 @@ module Mittsu
     def disable_unused_attributes
       @enabled_attributes.length.times do |i|
         if @enabled_attributes[i] && !@new_attributes[i]
-          GL.DisableVertexAttribArray(i)
+          gl.disable_vertex_attrib_array(i)
           @enabled_attributes[i] = false
         end
       end
@@ -56,27 +59,27 @@ module Mittsu
       if blending != @current_blending
         case blending
         when NoBlending
-          GL.Disable(GL::BLEND)
+          gl.disable(GL::BLEND)
         when AdditiveBlending
-          GL.Enable(GL::BLEND)
-          GL.BlendEquation(GL::FUNC_ADD)
-          GL.BlendFunc(GL::SRC_ALPHA, GL::ONE)
+          gl.enable(GL::BLEND)
+          gl.blend_equation(GL::FUNC_ADD)
+          gl.blend_func(GL::SRC_ALPHA, GL::ONE)
         when SubtractiveBlending
           # TODO: Find blendFuncSeparate() combination ???
-          GL.Enable(GL::BLEND)
-          GL.BlendEquation(GL::FUNC_ADD)
-          GL.BlendFunc(GL::ZERO, GL::ONE_MINUS_SRC_COLOR)
+          gl.enable(GL::BLEND)
+          gl.blend_equation(GL::FUNC_ADD)
+          gl.blend_func(GL::ZERO, GL::ONE_MINUS_SRC_COLOR)
         when MultiplyBlending
           # TODO: Find blendFuncSeparate() combination ???
-          GL.Enable(GL::BLEND)
-          GL.BlendEquation(GL::FUNC_ADD)
-          GL.BlendFunc(GL::ZERO, GL::ONE_MINUS_SRC_COLOR)
+          gl.enable(GL::BLEND)
+          gl.blend_equation(GL::FUNC_ADD)
+          gl.blend_func(GL::ZERO, GL::ONE_MINUS_SRC_COLOR)
         when CustomBlending
-          GL.Enable(GL::BLEND)
+          gl.enable(GL::BLEND)
         else
-          GL.Enable(GL::BLEND)
-          GL.BlendEquationSeparate(GL::FUNC_ADD, GL::FUNC_ADD)
-          GL.BlendFuncSeparate(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA, GL::ONE, GL::ONE_MINUS_SRC_ALPHA)
+          gl.enable(GL::BLEND)
+          gl.blend_equation_separate(GL::FUNC_ADD, GL::FUNC_ADD)
+          gl.blend_func_separate(GL::SRC_ALPHA, GL::ONE_MINUS_SRC_ALPHA, GL::ONE, GL::ONE_MINUS_SRC_ALPHA)
         end
 
         @current_blending = blending
@@ -88,14 +91,14 @@ module Mittsu
         blend_dst_alpha ||= blend_dst
 
         if blend_equation != @current_blend_equation || blend_equation_alpha != @current_blend_equation_alpha
-          GL.BlendEquationSeparate(GL::MITTSU_PARAMS[blend_equation], GL::MITTSU_PARAMS[blend_equation_alpha])
+          gl.blend_equation_separate(GL::MITTSU_PARAMS[blend_equation], GL::MITTSU_PARAMS[blend_equation_alpha])
 
           @current_blend_equation = blend_equation
           @current_blend_equation_alpha = blend_equation_alpha
         end
 
         if blend_src != @current_blend_src || blend_dst != @current_blend_dst || blend_src_alpha != @current_blend_src_alpha || blend_dst_alpha != @current_blend_dst_alpha
-          GL.BlendFuncSeparate(GL::MITTSU_PARAMS[blend_src], GL::MITTSU_PARAMS[blend_dst], GL::MITTSU_PARAMS[blend_src_alpha], GL::MITTSU_PARAMS[blend_dst_alpha])
+          gl.blend_func_separate(GL::MITTSU_PARAMS[blend_src], GL::MITTSU_PARAMS[blend_dst], GL::MITTSU_PARAMS[blend_src_alpha], GL::MITTSU_PARAMS[blend_dst_alpha])
 
           @current_blend_src = nil
           @current_blend_dst = nil
@@ -115,9 +118,9 @@ module Mittsu
     def set_depth_test(depth_test)
       if @current_depth_test != depth_test
         if depth_test
-          GL.Enable(GL::DEPTH_TEST)
+          gl.enable(GL::DEPTH_TEST)
         else
-          GL.Disable(GL::DEPTH_TEST)
+          gl.disable(GL::DEPTH_TEST)
         end
 
         @current_depth_test = depth_test
@@ -126,15 +129,14 @@ module Mittsu
 
     def set_depth_write(depth_write)
       if @current_depth_write != depth_write
-        GL.DepthMask(depth_write ? GL::TRUE : GL::FALSE)
+        gl.depth_mask(depth_write)
         @current_depth_write = depth_write
       end
     end
 
     def set_color_write(color_write)
       if @current_color_write != color_write
-        gl_color_write = color_write ? GL::TRUE : GL::FALSE
-        GL.ColorMask(gl_color_write, gl_color_write, gl_color_write, gl_color_write)
+        gl.color_mask(color_write, color_write, color_write, color_write)
         @current_color_write = color_write
       end
     end
@@ -142,9 +144,9 @@ module Mittsu
     def set_double_sided(double_sided)
       if @current_double_sided != double_sided
         if double_sided
-          GL.Disable(GL::CULL_FACE)
+          gl.disable(GL::CULL_FACE)
         else
-          GL.Enable(GL::CULL_FACE)
+          gl.enable(GL::CULL_FACE)
         end
 
         @current_double_sided = double_sided
@@ -154,9 +156,9 @@ module Mittsu
     def set_flip_sided(flip_sided)
       if @current_flip_sided != flip_sided
         if flip_sided
-          GL.FrontFace(GL::CW)
+          gl.front_face(GL::CW)
         else
-          GL.FrontFace(GL::CCW)
+          gl.front_face(GL::CCW)
         end
 
         @current_flip_sided = flip_sided
@@ -165,7 +167,7 @@ module Mittsu
 
     def set_line_width(width)
       if width != @current_line_width
-        GL.LineWidth(width)
+        gl.line_width(width)
         @current_line_width = width
       end
     end
@@ -173,16 +175,16 @@ module Mittsu
     def set_polygon_offset(polygon_offset, factor, units)
       if @current_polygon_offset != polygon_offset
         if polygon_offset
-          GL.Enable(GL::POLYGON_OFFSET_FILL)
+          gl.enable(GL::POLYGON_OFFSET_FILL)
         else
-          GL.Disable(GL::POLYGON_OFFSET_FILL)
+          gl.disable(GL::POLYGON_OFFSET_FILL)
         end
 
         @current_polygon_offset = polygon_offset
       end
 
       if polygon_offset && (@current_polygon_offset_factor != factor || @current_polygon_offset_units != units)
-        GL.PolygonOffset(factor, units)
+        gl.polygon_offset(factor, units)
 
         @current_polygon_offset_factor = factor
         @current_polygon_offset_units = units

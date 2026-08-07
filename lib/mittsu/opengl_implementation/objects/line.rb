@@ -5,7 +5,7 @@ module Mittsu
 
       @renderer.state.set_line_width(material.line_width * @renderer.pixel_ratio)
 
-      GL.DrawArrays(opengl_mode, 0, geometry_group.line_count)
+      gl.draw_arrays(opengl_mode, 0, geometry_group.line_count)
 
       @renderer.info[:render][:calls] += 1
     end

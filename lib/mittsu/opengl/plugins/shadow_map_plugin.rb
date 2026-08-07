@@ -54,6 +54,10 @@ module Mittsu
       @depth_material_morph_skin.shadow_pass = true
     end
 
+    def gl
+      @renderer.gl
+    end
+
     def render(scene, camera)
       return unless @renderer.shadow_map_enabled
 
@@ -62,16 +66,16 @@ module Mittsu
 
       # set GL state for depth map
 
-      GL.ClearColor(1.0, 1.0, 1.0, 1.0)
-      GL.Disable(GL::BLEND)
+      gl.clear_color(1.0, 1.0, 1.0, 1.0)
+      gl.disable(GL::BLEND)
 
-      GL.Enable(GL::CULL_FACE)
-      GL.FrontFace(GL::CCW)
+      gl.enable(GL::CULL_FACE)
+      gl.front_face(GL::CCW)
 
       if @renderer.shadow_map_cull_face = CullFaceFront
-        GL.CullFace(GL::FRONT)
+        gl.cull_face(GL::FRONT)
       else
-        GL.CullFace(GL::BACK)
+        gl.cull_face(GL::BACK)
       end
 
       @renderer.state.set_depth_test(true)
@@ -257,11 +261,11 @@ module Mittsu
       clear_color = @renderer.get_clear_color
       clear_alpha = @renderer.get_clear_alpha
 
-      GL.ClearColor(clear_color.r, clear_color.g, clear_color.b, clear_alpha)
-      GL.Enable(GL::BLEND)
+      gl.clear_color(clear_color.r, clear_color.g, clear_color.b, clear_alpha)
+      gl.enable(GL::BLEND)
 
       if @renderer.shadow_map_cull_face == CullFaceFront
-        GL.CullFace(GL::BACK)
+        gl.cull_face(GL::BACK)
       end
 
       @renderer.reset_gl_state

@@ -2,6 +2,10 @@ module Mittsu
   class Mesh
     attr_accessor :renderer
 
+    def gl
+      renderer.gl
+    end
+
     def render_buffer(camera, lights, fog, material, geometry_group, update_buffers)
       type = GL::UNSIGNED_INT # geometry_group.type_array == Uint32Array ? GL::UNSIGNED_INT : GL::UNSIGNED_SHORT
 
@@ -9,13 +13,13 @@ module Mittsu
       if material.wireframe
         @renderer.state.set_line_width(material.wireframe_linewidth * @renderer.pixel_ratio)
 
-        GL.BindBuffer(GL::ELEMENT_ARRAY_BUFFER, geometry_group.line_buffer) if update_buffers
-        GL.DrawElements(GL::LINES, geometry_group.line_count, type, 0)
+        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, geometry_group.line_buffer) if update_buffers
+        gl.draw_elements(GL::LINES, geometry_group.line_count, type, 0)
 
       # triangles
       else
-        GL.BindBuffer(GL::ELEMENT_ARRAY_BUFFER, geometry_group.face_buffer) if update_buffers
-        GL.DrawElements(GL::TRIANGLES, geometry_group.face_count, type, 0)
+        gl.bind_buffer(GL::ELEMENT_ARRAY_BUFFER, geometry_group.face_buffer) if update_buffers
+        gl.draw_elements(GL::TRIANGLES, geometry_group.face_count, type, 0)
       end
 
       @renderer.info[:render][:calls] += 1

@@ -20,7 +20,7 @@ module Mittsu
 
       add_event_listener(:dispose, @renderer.method(:on_render_target_dispose))
 
-      @opengl_texture = GL.CreateTexture
+      @opengl_texture = gl.gen_texture
 
       @renderer.info[:memory][:textures] += 1
 
@@ -33,32 +33,32 @@ module Mittsu
       if is_cube
         # TODO
       else
-        @framebuffer = GL.CreateFramebuffer
+        @framebuffer = gl.gen_framebuffer
 
         if @share_depth_from
           @renderbuffer = share_depth_from.renderbuffer
         else
-          @renderbuffer = GL.CreateRenderbuffer
+          @renderbuffer = gl.gen_renderbuffer
         end
 
-        GL.BindTexture(GL::TEXTURE_2D, @opengl_texture)
+        gl.bind_texture(GL::TEXTURE_2D, @opengl_texture)
         set_parameters(GL::TEXTURE_2D, is_target_power_of_two)
 
-        GL.TexImage2D(GL::TEXTURE_2D, 0, gl_format, @width, @height, 0, gl_format, gl_type, nil)
+        gl.tex_image_2d(GL::TEXTURE_2D, 0, gl_format, @width, @height, 0, gl_format, gl_type, nil)
 
         setup_framebuffer(GL::TEXTURE_2D)
 
         if @share_depth_from
           if @depth_buffer && !@stencil_buffer
-            GL.FramebufferRenderbuffer(GL::FRAMEBUFFER, GL::DEPTH_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
+            gl.framebuffer_renderbuffer(GL::FRAMEBUFFER, GL::DEPTH_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
           elsif @depth_buffer && @stencil_buffer
-            GL.FramebufferRenderbuffer(GL::FRAMEBUFFER, GL::DEPTH_STENCIL_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
+            gl.framebuffer_renderbuffer(GL::FRAMEBUFFER, GL::DEPTH_STENCIL_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
           end
         else
           setup_renderbuffer
         end
 
-        GL.GenerateMipmap(GL::TEXTURE_2D) if is_target_power_of_two
+        gl.generate_mipmap(GL::TEXTURE_2D) if is_target_power_of_two
       end
 
       # Release everything
@@ -66,16 +66,16 @@ module Mittsu
       if is_cube
         # TODO
       else
-        GL.BindTexture(GL::TEXTURE_2D, 0)
+        gl.bind_texture(GL::TEXTURE_2D, 0)
       end
 
-      GL.BindRenderbuffer(GL::RENDERBUFFER, 0)
-      GL.BindFramebuffer(GL::FRAMEBUFFER, 0)
+      gl.bind_renderbuffer(GL::RENDERBUFFER, 0)
+      gl.bind_framebuffer(GL::FRAMEBUFFER, 0)
     end
 
     def use
-      GL.BindFramebuffer(GL::FRAMEBUFFER, @framebuffer)
-      GL.Viewport(0, 0, @width, @height)
+      gl.bind_framebuffer(GL::FRAMEBUFFER, @framebuffer)
+      gl.viewport(0, 0, @width, @height)
     end
 
     def dispose
@@ -88,24 +88,24 @@ module Mittsu
   		# 	GL.BindTexture(GL::TEXTURE_CUBE_MAP, @opengl_texture)
   		# 	GL.GenerateMipmap(GL::TEXTURE_CUBE_MAP)
   		# 	GL.BindTexture(GL::TEXTURE_CUBE_MAP, nil)
-			GL.BindTexture(GL::TEXTURE_2D, @opengl_texture)
-			GL.GenerateMipmap(GL::TEXTURE_2D)
-			GL.BindTexture(GL::TEXTURE_2D, nil)
+			gl.bind_texture(GL::TEXTURE_2D, @opengl_texture)
+			gl.generate_mipmap(GL::TEXTURE_2D)
+			gl.bind_texture(GL::TEXTURE_2D, nil)
     end
 
     private
 
     def setup_framebuffer(texture_target)
-      GL.BindFramebuffer(GL::FRAMEBUFFER, @framebuffer)
-      GL.FramebufferTexture2D(GL::FRAMEBUFFER, GL::COLOR_ATTACHMENT0, texture_target, @opengl_texture, 0)
+      gl.bind_framebuffer(GL::FRAMEBUFFER, @framebuffer)
+      gl.framebuffer_texture_2d(GL::FRAMEBUFFER, GL::COLOR_ATTACHMENT0, texture_target, @opengl_texture, 0)
     end
 
     def setup_renderbuffer
-      GL.BindRenderbuffer(GL::RENDERBUFFER, @renderbuffer)
+      gl.bind_renderbuffer(GL::RENDERBUFFER, @renderbuffer)
 
       if @depth_buffer && !@stencil_buffer
-        GL.RenderbufferStorage(GL::RENDERBUFFER, GL::DEPTH_COMPONENT16, @width, @height)
-        GL.FramebufferRenderbuffer(GL::FRAMEBUFFER, GL::DEPTH_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
+        gl.renderbuffer_storage(GL::RENDERBUFFER, GL::DEPTH_COMPONENT16, @width, @height)
+        gl.framebuffer_renderbuffer(GL::FRAMEBUFFER, GL::DEPTH_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
 
         # TODO: investigate this (?):
     		# THREE.js - For some reason this is not working. Defaulting to RGBA4.
@@ -114,10 +114,10 @@ module Mittsu
     		# 	_gl.renderbufferStorage( _gl.RENDERBUFFER, _gl.STENCIL_INDEX8, renderTarget.width, renderTarget.height );
     		# 	_gl.framebufferRenderbuffer( _gl.FRAMEBUFFER, _gl.STENCIL_ATTACHMENT, _gl.RENDERBUFFER, renderbuffer );
       elsif @depth_buffer && @stencil_buffer
-        GL.RenderbufferStorage(GL::RENDERBUFFER, GL::DEPTH_STENCIL, @width, @height)
-        GL.FramebufferRenderbuffer(GL::FRAMEBUFFER, GL::DEPTH_STENCIL_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
+        gl.renderbuffer_storage(GL::RENDERBUFFER, GL::DEPTH_STENCIL, @width, @height)
+        gl.framebuffer_renderbuffer(GL::FRAMEBUFFER, GL::DEPTH_STENCIL_ATTACHMENT, GL::RENDERBUFFER, @renderbuffer)
       else
-        GL.RenderbufferStorage(GL::RENDERBUFFER, GL::RGBA4, @width, @height)
+        gl.renderbuffer_storage(GL::RENDERBUFFER, GL::RGBA4, @width, @height)
       end
     end
   end
